@@ -1,4 +1,36 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
+
+// Edit covered scope if needed
+// For my part I like having the coverage of both application and tests
+def coverageSourceDirs = [
+        '../app/src/main/java/demoapp/cc/com/codecoverageapp/Helper'
+]
+
+task jacocoTestReport(type: JacocoReport, dependsOn: "test") {
+    group = "Reporting"
+
+    description = "Generate Jacoco coverage reports"
+
+    classDirectories = fileTree(
+            dir: '../app/build/intermediates/classes',
+            excludes: ['**/R.class',
+                       '**/R$*.class',
+                       '**/*$ViewInjector*.*',
+                       '**/BuildConfig.*',
+                       '**/Manifest*.*']
+    )
+
+    additionalSourceDirs = files(coverageSourceDirs)
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = files('../app/build/jacoco/testUnitTestDebug.exec')
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+}
 
 android {
     compileSdkVersion 28
@@ -15,6 +47,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug{
+            testCoverageEnabled true
+        }
+
     }
 }
 
