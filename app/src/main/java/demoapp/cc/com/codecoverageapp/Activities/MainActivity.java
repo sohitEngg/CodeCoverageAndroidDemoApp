@@ -1,13 +1,17 @@
-package demoapp.cc.com.codecoverageapp;
+package demoapp.cc.com.codecoverageapp.Activities;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+
+import demoapp.cc.com.codecoverageapp.Helper.TextHelper;
+import demoapp.cc.com.codecoverageapp.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +30,10 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        TextHelper th = new TextHelper();
+        String value = th.getText(25);
+        ((TextView)findViewById(R.id.tvMain)).setText(value);
     }
 
     @Override

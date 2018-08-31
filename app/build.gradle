@@ -1,37 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'jacoco'
 
-// Edit covered scope if needed
-// For my part I like having the coverage of both application and tests
-def coverageSourceDirs = [
-        '../app/src/main/java/demoapp/cc/com/codecoverageapp/Helper'
-]
-
-task jacocoTestReport(type: JacocoReport, dependsOn: "test") {
-    group = "Reporting"
-
-    description = "Generate Jacoco coverage reports"
-
-    classDirectories = fileTree(
-            dir: '../app/build/intermediates/classes',
-            excludes: ['**/R.class',
-                       '**/R$*.class',
-                       '**/*$ViewInjector*.*',
-                       '**/BuildConfig.*',
-                       '**/Manifest*.*']
-    )
-
-    additionalSourceDirs = files(coverageSourceDirs)
-    sourceDirectories = files(coverageSourceDirs)
-    executionData = files('../app/build/jacoco/testUnitTestDebug.exec')
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-}
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -53,6 +22,122 @@ android {
 
     }
 }
+
+jacoco {
+    toolVersion = "0.7.7.201606060606"
+}
+def fileFilter = [
+        'demoapp/cc/com/codecoverageapp/**/Activities/**.*',
+        '**/R.class', '**/R$*.class', '**/BuildConfig.*',
+        '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+def debugTree = fileTree(dir: "${buildDir}/intermediates/classes/debug", excludes: fileFilter)
+def mainSrc = "${project.projectDir}/src/main/java"
+
+
+task customJacocoTestReport(type: JacocoReport, dependsOn: 'test') {
+
+    reports {
+        html.enabled = true
+        html.setDestination(file("${buildDir}/reports/jacoco"))
+    }
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    executionData = files("${buildDir}/jacoco/testDebugUnitTest.exec")
+}
+
+task customJacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'customJacocoTestReport') {
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    executionData = files("${buildDir}/jacoco/testDebugUnitTest.exec")
+
+
+    violationRules {
+        setFailOnViolation(true)
+
+//        rule {
+//            element = 'PACKAGE'
+//
+//            limit {
+//                value = 'COVEREDRATIO'
+//                counter = 'BRANCH'
+//                minimum = 0.8
+//            }
+//        }
+
+        rule {
+            element = 'PACKAGE'
+
+            limit {
+                value = 'COVEREDRATIO'
+                counter = 'INSTRUCTION'
+                minimum = 0.6
+            }
+        }
+
+        rule {
+            element = 'PACKAGE'
+            includes = ['demoapp.cc.com.codecoverageapp']
+            enabled = true
+
+            limit {
+                counter = 'CLASS'
+                value = 'MISSEDCOUNT'
+                maximum = 0
+            }
+        }
+    }
+}
+
+//// Define coverage source.
+//// If you have rs/aidl etc... add them here.
+//def coverageSourceDirs = [
+//        'src/main/java/demoapp/cc/com/codecoverageapp/Helper',
+//]
+//
+//task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest") {
+//    group = "Reporting"
+//    description = "Generate Jacoco coverage reports after running tests."
+//    reports {
+//        xml.enabled = true
+//        html.enabled = true
+//    }
+//    classDirectories = fileTree(
+//            dir: './build/intermediates/classes/debug',
+//            excludes: [
+//                       '**/R*.class',
+//                       '**/*$InjectAdapter.class',
+//                       '**/*$ModuleAdapter.class',
+//                       '**/*$ViewInjector*.class'
+//            ])
+//    sourceDirectories = files(coverageSourceDirs)
+//    executionData = files("$buildDir/jacoco/testDebug.exec")
+//    // Bit hacky but fixes https://code.google.com/p/android/issues/detail?id=69174.
+//    // We iterate through the compiled .class tree and rename $$ to $.
+//    doFirst {
+//        new File("$buildDir/intermediates/classes/").eachFileRecurse { file ->
+//            if (file.name.contains('$$')) {
+//                file.renameTo(file.path.replace('$$', '$'))
+//            }
+//        }
+//    }
+//}
+//task jacocoTestCoverageVerification(type: JacocoCoverageVerification) {
+//    violationRules {
+//        rule {
+//            excludes = [
+//                    'demoapp/cc/com/codecoverageapp/Activities/*',
+//            ]
+//            limit {
+//                minimum = 0.79
+//            }
+//        }
+//    }
+//}
+//
+//// to run coverage verification during the build (and fail when appropriate)
+//check.dependsOn jacocoTestCoverageVerification
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
